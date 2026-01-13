@@ -36,6 +36,8 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -43,7 +45,6 @@ import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
@@ -223,7 +224,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
       }
     };
     if (httpHeaders != null) {
-      headers = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+      headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
       headers.putAll(httpHeaders);
     }
     this.connectTimeout = connectTimeout;
@@ -269,7 +270,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
    */
   public void addHeader(String key, String value) {
     if (headers == null) {
-      headers = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+      headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     }
     headers.put(key, value);
   }
@@ -327,6 +328,21 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
   }
 
   /**
+   * Same as <code>reconnect</code> but blocks with a timeout until the websocket connected or failed
+   * to do so.<br>
+   *
+   * @param timeout  The connect timeout
+   * @param timeUnit The timeout time unit
+   * @return Returns whether it succeeded or not.
+   * @throws InterruptedException Thrown when the threads get interrupted
+   * @since 1.6.1
+   */
+  public boolean reconnectBlocking(long timeout, TimeUnit timeUnit) throws InterruptedException {
+    reset();
+    return connectBlocking(timeout, timeUnit);
+  }
+
+  /**
    * Reset everything relevant to allow a reconnect
    *
    * @since 1.3.8
@@ -338,13 +354,21 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
           "You cannot initialize a reconnect out of the websocket thread. Use reconnect in another thread to ensure a successful cleanup.");
     }
     try {
+      // This socket null check ensures we can reconnect a socket that failed to connect. It's an uncommon edge case, but we want to make sure we support it
+      if (engine.getReadyState() == ReadyState.NOT_YET_CONNECTED && socket != null) {
+        // Closing the socket when we have not connected prevents the writeThread from hanging on a write indefinitely during connection teardown
+        socket.close();
+      }
       closeBlocking();
+
       if (writeThread != null) {
         this.writeThread.interrupt();
+        this.writeThread.join();
         this.writeThread = null;
       }
       if (connectReadThread != null) {
         this.connectReadThread.interrupt();
+        this.connectReadThread.join();
         this.connectReadThread = null;
       }
       this.draft.reset();
@@ -370,6 +394,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
       throw new IllegalStateException("WebSocketClient objects are not reuseable");
     }
     connectReadThread = new Thread(this);
+    connectReadThread.setDaemon(isDaemon());
     connectReadThread.setName("WebSocketConnectReadThread-" + connectReadThread.getId());
     connectReadThread.start();
   }
@@ -397,7 +422,13 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
    */
   public boolean connectBlocking(long timeout, TimeUnit timeUnit) throws InterruptedException {
     connect();
-    return connectLatch.await(timeout, timeUnit) && engine.isOpen();
+
+    boolean connected = connectLatch.await(timeout, timeUnit);
+    if (!connected) {
+      reset();
+    }
+
+    return connected && engine.isOpen();
   }
 
   /**
@@ -461,41 +492,23 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
   public void run() {
     InputStream istream;
     try {
-      boolean upgradeSocketToSSLSocket = false;
-      // Prioritise a proxy over a socket factory and apply the socketfactory later
-      if (proxy != Proxy.NO_PROXY) {
-        socket = new Socket(proxy);
-        upgradeSocketToSSLSocket = true;
-      } else if (socketFactory != null) {
-        socket = socketFactory.createSocket();
-      } else if (socket == null) {
-        socket = new Socket(proxy);
-        upgradeSocketToSSLSocket = true;
-      } else if (socket.isClosed()) {
-        throw new IOException();
-      }
+      boolean upgradeSocketToSSLSocket = prepareSocket();
 
       socket.setTcpNoDelay(isTcpNoDelay());
       socket.setReuseAddress(isReuseAddr());
+      int receiveBufferSize = getReceiveBufferSize();
+      if (receiveBufferSize > 0) {
+        socket.setReceiveBufferSize(receiveBufferSize);
+      }
 
       if (!socket.isConnected()) {
-        InetSocketAddress addr = new InetSocketAddress(dnsResolver.resolve(uri), this.getPort());
+        InetSocketAddress addr = dnsResolver == null ? InetSocketAddress.createUnresolved(uri.getHost(), getPort()) : new InetSocketAddress(dnsResolver.resolve(uri), this.getPort());
         socket.connect(addr, connectTimeout);
       }
 
       // if the socket is set by others we don't apply any TLS wrapper
       if (upgradeSocketToSSLSocket && "wss".equals(uri.getScheme())) {
-        SSLSocketFactory factory;
-        // Prioritise the provided socketfactory
-        // Helps when using web debuggers like Fiddler Classic
-        if (socketFactory != null && (socketFactory instanceof SSLSocketFactory)) {
-          factory = (SSLSocketFactory) socketFactory;
-        } else {
-          SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-          sslContext.init(null, null, null);
-          factory = sslContext.getSocketFactory();
-        }
-        socket = factory.createSocket(socket, uri.getHost(), getPort(), true);
+        upgradeSocketToSSL();
       }
 
       if (socket instanceof SSLSocket) {
@@ -525,10 +538,20 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
       throw e;
     }
 
+    if (writeThread != null) {
+      writeThread.interrupt();
+      try {
+        writeThread.join();
+      } catch (InterruptedException e) {
+        /* ignore */
+      }
+    }
     writeThread = new Thread(new WebsocketWriteThread(this));
+    writeThread.setDaemon(isDaemon());
     writeThread.start();
 
-    byte[] rawbuffer = new byte[WebSocketImpl.RCVBUF];
+    int receiveBufferSize = getReceiveBufferSize();
+    byte[] rawbuffer = new byte[receiveBufferSize > 0 ? receiveBufferSize : DEFAULT_READ_BUFFER_SIZE];
     int readBytes;
 
     try {
@@ -543,7 +566,36 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
       onError(e);
       engine.closeConnection(CloseFrame.ABNORMAL_CLOSE, e.getMessage());
     }
-    connectReadThread = null;
+  }
+
+  private void upgradeSocketToSSL()
+      throws NoSuchAlgorithmException, KeyManagementException, IOException {
+    SSLSocketFactory factory;
+    // Prioritise the provided socketfactory
+    // Helps when using web debuggers like Fiddler Classic
+    if (socketFactory instanceof SSLSocketFactory) {
+      factory = (SSLSocketFactory) socketFactory;
+    } else {
+      factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+    }
+    socket = factory.createSocket(socket, uri.getHost(), getPort(), true);
+  }
+
+  private boolean prepareSocket() throws IOException {
+    boolean upgradeSocketToSSLSocket = false;
+    // Prioritise a proxy over a socket factory and apply the socketfactory later
+    if (proxy != Proxy.NO_PROXY) {
+      socket = new Socket(proxy);
+      upgradeSocketToSSLSocket = true;
+    } else if (socketFactory != null) {
+      socket = socketFactory.createSocket();
+    } else if (socket == null) {
+      socket = new Socket(proxy);
+      upgradeSocketToSSLSocket = true;
+    } else if (socket.isClosed()) {
+      throw new IOException();
+    }
+    return upgradeSocketToSSLSocket;
   }
 
   /**
@@ -789,7 +841,6 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
         handleIOException(e);
       } finally {
         closeSocket();
-        writeThread = null;
       }
     }
 
@@ -943,12 +994,16 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 
   @Override
   public boolean hasSSLSupport() {
-    return engine.hasSSLSupport();
+    return socket instanceof SSLSocket;
   }
 
   @Override
   public SSLSession getSSLSession() {
-    return engine.getSSLSession();
+    if (!hasSSLSupport()) {
+      throw new IllegalArgumentException(
+          "This websocket uses ws instead of wss. No SSLSession available.");
+    }
+    return ((SSLSocket)socket).getSession();
   }
 
   @Override

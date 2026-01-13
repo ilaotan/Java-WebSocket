@@ -86,11 +86,6 @@ public class WebSocketImpl implements WebSocket {
   public static final int DEFAULT_WSS_PORT = 443;
 
   /**
-   * Initial buffer size
-   */
-  public static final int RCVBUF = 16384;
-
-  /**
    * Logger instance
    *
    * @since 1.4.0
@@ -190,7 +185,7 @@ public class WebSocketImpl implements WebSocket {
     this.role = Role.SERVER;
     // draft.copyInstance will be called when the draft is first needed
     if (drafts == null || drafts.isEmpty()) {
-      knownDrafts = new ArrayList<Draft>();
+      knownDrafts = new ArrayList<>();
       knownDrafts.add(new Draft_6455());
     } else {
       knownDrafts = drafts;
@@ -208,8 +203,8 @@ public class WebSocketImpl implements WebSocket {
     if (listener == null || (draft == null && role == Role.SERVER)) {
       throw new IllegalArgumentException("parameters must not be null");
     }
-    this.outQueue = new LinkedBlockingQueue<ByteBuffer>();
-    inQueue = new LinkedBlockingQueue<ByteBuffer>();
+    this.outQueue = new LinkedBlockingQueue<>();
+    inQueue = new LinkedBlockingQueue<>();
     this.wsl = listener;
     this.role = Role.CLIENT;
     if (draft != null) {
@@ -224,10 +219,11 @@ public class WebSocketImpl implements WebSocket {
    */
   public void decode(ByteBuffer socketBuffer) {
     assert (socketBuffer.hasRemaining());
-    log.trace("process({}): ({})", socketBuffer.remaining(),
-        (socketBuffer.remaining() > 1000 ? "too big to display"
-            : new String(socketBuffer.array(), socketBuffer.position(), socketBuffer.remaining())));
-
+    if (log.isTraceEnabled()) {
+      log.trace("process({}): ({})", socketBuffer.remaining(),
+              (socketBuffer.remaining() > 1000 ? "too big to display"
+                      : new String(socketBuffer.array(), socketBuffer.position(), socketBuffer.remaining())));
+    }
     if (readyState != ReadyState.NOT_YET_CONNECTED) {
       if (readyState == ReadyState.OPEN) {
         decodeFrames(socketBuffer);
@@ -410,6 +406,15 @@ public class WebSocketImpl implements WebSocket {
       log.error("Closing due to invalid data in frame", e);
       wsl.onWebsocketError(this, e);
       close(e);
+    } catch (VirtualMachineError | ThreadDeath | LinkageError e) {
+      log.error("Got fatal error during frame processing");
+      throw e;
+    } catch (Error e) {
+      log.error("Closing web socket due to an error during frame processing");
+      Exception exception = new Exception(e);
+      wsl.onWebsocketError(this, exception);
+      String errorMessage = "Got error " + e.getClass().getName();
+      close(CloseFrame.UNEXPECTED_CONDITION, errorMessage);
     }
   }
 
@@ -666,7 +671,7 @@ public class WebSocketImpl implements WebSocket {
     if (frames == null) {
       throw new IllegalArgumentException();
     }
-    ArrayList<ByteBuffer> outgoingFrames = new ArrayList<ByteBuffer>();
+    ArrayList<ByteBuffer> outgoingFrames = new ArrayList<>();
     for (Framedata f : frames) {
       log.trace("send frame: {}", f);
       outgoingFrames.add(draft.createBinaryFrame(f));
@@ -752,6 +757,7 @@ public class WebSocketImpl implements WebSocket {
   private void open(Handshakedata d) {
     log.trace("open using draft: {}", draft);
     readyState = ReadyState.OPEN;
+    updateLastPong();
     try {
       wsl.onWebsocketOpen(this, d);
     } catch (RuntimeException e) {

@@ -1,9 +1,7 @@
 Java WebSockets
 ===============
-[![Build Status](https://travis-ci.org/marci4/Java-WebSocket-Dev.svg?branch=master)](https://travis-ci.org/marci4/Java-WebSocket-Dev)
 [![Javadocs](https://www.javadoc.io/badge/org.java-websocket/Java-WebSocket.svg)](https://www.javadoc.io/doc/org.java-websocket/Java-WebSocket)
 [![Maven Central](https://img.shields.io/maven-central/v/org.java-websocket/Java-WebSocket.svg)](https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket)
-[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/oss.sonatype.org/org.java-websocket/Java-WebSocket.svg)](https://oss.sonatype.org/content/repositories/snapshots/org/java-websocket/Java-WebSocket/)
 
 This repository contains a barebones WebSocket server and client implementation
 written in 100% Java. The underlying classes are implemented `java.nio`, which allows for a
@@ -15,8 +13,8 @@ Implemented WebSocket protocol versions are:
  * [RFC 6455](http://tools.ietf.org/html/rfc6455)
  * [RFC 7692](http://tools.ietf.org/html/rfc7692)
 
-[Here](https://github.com/TooTallNate/Java-WebSocket/wiki/Drafts) some more details about protocol versions/drafts. 
-[PerMessageDeflateExample](https://github.com/TooTallNate/Java-WebSocket/wiki/PerMessageDeflateExample) enable the extension with reference to both a server and client example. 
+[Here](https://github.com/TooTallNate/Java-WebSocket/wiki/Drafts) some more details about protocol versions/drafts.
+[PerMessageDeflateExample](https://github.com/TooTallNate/Java-WebSocket/wiki/PerMessageDeflateExample) enable the extension with reference to both a server and client example.
 
 
 ## Getting Started
@@ -31,7 +29,7 @@ To use maven add this dependency to your pom.xml:
 <dependency>
   <groupId>org.java-websocket</groupId>
   <artifactId>Java-WebSocket</artifactId>
-  <version>1.5.1</version>
+  <version>1.6.0</version>
 </dependency>
 ```
 
@@ -42,7 +40,11 @@ mavenCentral()
 ```
 Then you can just add the latest version to your build.
 ```xml
-compile "org.java-websocket:Java-WebSocket:1.5.1"
+compile "org.java-websocket:Java-WebSocket:1.6.0"
+```
+Or this option if you use gradle 7.0 and above.
+```xml
+implementation 'org.java-websocket:Java-WebSocket:1.6.0'
 ```
 
 #### Logging
@@ -76,14 +78,14 @@ Writing your own WebSocket Client
 The `org.java_websocket.client.WebSocketClient` abstract class can connect to
 valid WebSocket servers. The constructor expects a valid `ws://` URI to
 connect to. Important events `onOpen`, `onClose`, `onMessage` and `onError`
-get fired throughout the life of the WebSocketClient, and must be implemented 
+get fired throughout the life of the WebSocketClient, and must be implemented
 in **your** subclass.
 
 An example for a WebSocketClient can be found in both the [wiki](https://github.com/TooTallNate/Java-WebSocket/wiki#client-example) and the [example](https://github.com/TooTallNate/Java-WebSocket/tree/master/src/main/example) folder.
 
 Examples
 -------------------
- 
+
 You can find a lot of examples [here](https://github.com/TooTallNate/Java-WebSocket/tree/master/src/main/example).
 
 WSS Support
@@ -94,7 +96,7 @@ To see how to use wss please take a look at the examples.<br>
 If you do not have a valid **certificate** in place then you will have to create a self signed one.
 Browsers will simply refuse the connection in case of a bad certificate and will not ask the user to accept it.
 So the first step will be to make a browser to accept your self signed certificate. ( https://bugzilla.mozilla.org/show_bug.cgi?id=594502 ).<br>
-If the websocket server url is `wss://localhost:8000` visit the url `https://localhost:8000` with your browser. The browser will recognize the handshake and allow you to accept the certificate. This technique is also demonstrated in this [video](http://www.youtube.com/watch?v=F8lBdfAZPkU).
+If the websocket server url is `wss://localhost:8000` visit the url `https://localhost:8000` with your browser. The browser will recognize the handshake and allow you to accept the certificate.
 
 The vm option `-Djavax.net.debug=all` can help to find out if there is a problem with the certificate.
 
@@ -111,7 +113,7 @@ Minimum Required JDK
 
 `Java-WebSocket` is known to work with:
 
- * Java 1.7 and higher
+ * Java 8 and higher
 
 Other JRE implementations may work as well, but haven't been tested.
 

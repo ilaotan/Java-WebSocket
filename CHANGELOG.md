@@ -1,5 +1,134 @@
 # Change log
 
+###############################################################################
+## Version Release 1.6.0 (2024/12/15)
+
+#### Breaking Changes
+
+* [Issue 1434](https://github.com/TooTallNate/Java-WebSocket/issues/1434) - Drop Java 1.7 support ([PR 1435](https://github.com/TooTallNate/Java-WebSocket/pull/1435))
+* [PR 1435](https://github.com/TooTallNate/Java-WebSocket/pull/1435) - Drop support for Java 1.7
+
+#### Bugs Fixed
+
+* [Issue 1437](https://github.com/TooTallNate/Java-WebSocket/issues/1437) - Question: How can the compression threshold be set for the PerMessageDeflateExtension in a Deflate Client? ([PR 1439](https://github.com/TooTallNate/Java-WebSocket/pull/1439))
+* [Issue 1400](https://github.com/TooTallNate/Java-WebSocket/issues/1400) - PerMessageDeflateExtension#setDeflater()/#setInflater() is overwritten in case of no_context_takeover ([PR 1439](https://github.com/TooTallNate/Java-WebSocket/pull/1439))
+* [PR 1439](https://github.com/TooTallNate/Java-WebSocket/pull/1439) - Clone PerMessageDeflateExtension values correctly
+
+#### New Features
+
+* [Issue 1440](https://github.com/TooTallNate/Java-WebSocket/issues/1440) - Support for inherited sockets ([PR 1442](https://github.com/TooTallNate/Java-WebSocket/pull/1442))
+* [PR 1442](https://github.com/TooTallNate/Java-WebSocket/pull/1442) - Socket activation
+
+In this release 4 issues and 3 pull requests were closed.
+
+###############################################################################
+## Version Release 1.5.7 (2024/07/08)
+
+#### Breaking Changes
+
+* [PR 1399](https://github.com/TooTallNate/Java-WebSocket/pull/1399) - Have connectBlocking clean up after a timeout
+
+#### Bugs Fixed
+
+* [PR 1419](https://github.com/TooTallNate/Java-WebSocket/pull/1419) - Fix issue #1418: WebSocketServer sometimes misses GET request after SSL handshake
+
+#### New Features
+
+* [PR 1407](https://github.com/TooTallNate/Java-WebSocket/pull/1407) - Allow setting custom TCP receive buffer size
+* [PR 1399](https://github.com/TooTallNate/Java-WebSocket/pull/1399) - Have connectBlocking clean up after a timeout
+
+In this release 0 issues and 4 pull requests were closed.
+
+###############################################################################
+## Version Release 1.5.6 (2024/02/06)
+
+#### Bugs Fixed
+
+* [Issue 1382](https://github.com/TooTallNate/Java-WebSocket/issues/1382) - WebSocketClient.upgradeSocketToSSL is enforcing TLS 1.2 ([PR 1387](https://github.com/TooTallNate/Java-WebSocket/pull/1387))
+* [PR 1387](https://github.com/TooTallNate/Java-WebSocket/pull/1387) - Retrieve default SSL socket factory
+
+#### New Features
+
+* [Issue 1390](https://github.com/TooTallNate/Java-WebSocket/issues/1390) - Thread created by NamedThreadFactory should be a daemon ([PR 1391](https://github.com/TooTallNate/Java-WebSocket/pull/1391))
+* [PR 1391](https://github.com/TooTallNate/Java-WebSocket/pull/1391) - Provide way to start the client/server as daemons
+
+In this release 2 issues and 2 pull requests were closed.
+
+###############################################################################
+
+## Version Release 1.5.5 (2023/12/18)
+
+#### Bugs Fixed
+
+* [Issue 1365](https://github.com/TooTallNate/Java-WebSocket/issues/1365) - Hang on reconnectBlocking
+* [Issue 1364](https://github.com/TooTallNate/Java-WebSocket/issues/1364) - NPE during reconnect ([PR 1367](https://github.com/TooTallNate/Java-WebSocket/pull/1367))
+* [PR 1367](https://github.com/TooTallNate/Java-WebSocket/pull/1367) - Fix multiple issues related to reconnect
+
+In this release 2 issues and 1 pull request were closed.
+
+###############################################################################
+
+## Version Release 1.5.4 (2023/07/20)
+
+#### New Features
+
+* [Issue 1308](https://github.com/TooTallNate/Java-WebSocket/issues/1308) - Add support for Java modules ([PR 1309](https://github.com/TooTallNate/Java-WebSocket/pull/1309))
+* [PR 1309](https://github.com/TooTallNate/Java-WebSocket/pull/1309) - Add support for Java modules
+
+#### Refactoring
+
+* [PR 1259](https://github.com/TooTallNate/Java-WebSocket/pull/1259) - Replace usages of deprecated constructor Integer(String) with Integer.parseInt
+
+In this release 1 issue and 2 pull requests were closed.
+
+###############################################################################
+
+## Version Release 1.5.3 (2022/04/09)
+
+#### Bugs Fixed
+
+* [Issue 1230](https://github.com/TooTallNate/Java-WebSocket/issues/1230) - CONTINUOUS should be decoded depending on the first frame ([PR 1232 ](https://github.com/TooTallNate/Java-WebSocket/pull/1232) by [@marci4](https://github.com/marci4))
+* [Issue 1203](https://github.com/TooTallNate/Java-WebSocket/issues/1203) - Lost connection detection not working on delayed connect-Call ([PR 1204 ](https://github.com/TooTallNate/Java-WebSocket/pull/1204) by [@marci4](https://github.com/marci4))
+* [Issue 1164](https://github.com/TooTallNate/Java-WebSocket/issues/1164) - [Android & Node.js Server] Problem using PerMessageDeflateExtension with custom ping/pong messages ?  ([PR 1165 ](https://github.com/TooTallNate/Java-WebSocket/pull/1165) by [@marci4](https://github.com/marci4))
+* [Issue 1160](https://github.com/TooTallNate/Java-WebSocket/issues/1160) - `WebSocketWorker` does not handle `Throwable` ([PR 1223 ](https://github.com/TooTallNate/Java-WebSocket/pull/1223) by [@Serpion-ua](https://github.com/Serpion-ua))
+* [Issue 1142](https://github.com/TooTallNate/Java-WebSocket/issues/1142) - Verifying server certificate ([PR 1143 ](https://github.com/TooTallNate/Java-WebSocket/pull/1143) by [@marci4](https://github.com/marci4))
+* [PR 1227](https://github.com/TooTallNate/Java-WebSocket/pull/1227) - Correct web socket closing, by [@Serpion-ua](https://github.com/Serpion-ua)
+* [PR 1223](https://github.com/TooTallNate/Java-WebSocket/pull/1223) - Issue-1160 Added java.lang.Error handling in WebSocketImpl and WebSocketServer, by [@Serpion-ua](https://github.com/Serpion-ua)
+* [PR 1212](https://github.com/TooTallNate/Java-WebSocket/pull/1212) - high cpu when channel close exception fix, by [@Adeptius](https://github.com/Adeptius)
+
+#### New Features
+
+* [PR 1185](https://github.com/TooTallNate/Java-WebSocket/pull/1185) - Added support unresolved socket addresses, by [@vtsykun](https://github.com/vtsykun)
+
+In this release 5 issues and 8 pull requests were closed.
+
+###############################################################################
+
+## Version Release 1.5.2 (2021/04/05)
+
+#### Bugs Fixed
+
+* [Issue 1132](https://github.com/TooTallNate/Java-WebSocket/issues/1132) - Draft_6455 flagged by Veracode CWE-331 replace Random with SecureRandom ([PR 1133 ](https://github.com/TooTallNate/Java-WebSocket/pull/1133) by [@marci4](https://github.com/marci4))
+* [Issue 1053](https://github.com/TooTallNate/Java-WebSocket/issues/1053) - It's an invalid check null with SEC_WEB_SOCKET_KEY . ([PR 1054 ](https://github.com/TooTallNate/Java-WebSocket/pull/1054) by [@dota17](https://github.com/dota17))
+* [Issue 1026](https://github.com/TooTallNate/Java-WebSocket/issues/1026) - Force client to use the valid schema ([PR 1025 ](https://github.com/TooTallNate/Java-WebSocket/pull/1025) by [@yindex](https://github.com/yindex))
+* [PR 1070](https://github.com/TooTallNate/Java-WebSocket/pull/1070) - Prioritise using provided socket factory when creating socket with proxy, by [@marci4](https://github.com/marci4)
+* [PR 1028](https://github.com/TooTallNate/Java-WebSocket/pull/1028) - Fixed typo in WebSocketClient.reset's error message, by [@alphaho](https://github.com/alphaho)
+* [PR 1018](https://github.com/TooTallNate/Java-WebSocket/pull/1018) - Added missing return character, by [@pawankgupta-se](https://github.com/pawankgupta-se)
+
+#### New Features
+
+* [Issue 1008](https://github.com/TooTallNate/Java-WebSocket/issues/1008) - Improve Sec-WebSocket-Protocol usability ([PR 1034 ](https://github.com/TooTallNate/Java-WebSocket/pull/1034) by [@marci4](https://github.com/marci4))
+
+#### Refactoring
+
+* [Issue 1050](https://github.com/TooTallNate/Java-WebSocket/issues/1050) - What about adding the CodeFormatterProfile.xml with the code format ? ([PR 1060 ](https://github.com/TooTallNate/Java-WebSocket/pull/1060) by [@dota17](https://github.com/dota17))
+* [PR 1072](https://github.com/TooTallNate/Java-WebSocket/pull/1072) - Improve code quality, by [@marci4](https://github.com/marci4)
+* [PR 1060](https://github.com/TooTallNate/Java-WebSocket/pull/1060) - Using Google Java Code Style To Reformat Code, by [@dota17](https://github.com/dota17)
+
+In this release 5 issues and 9 pull requests were closed.
+
+###############################################################################
+
 ## Version Release 1.5.1 (2020/05/10)
 
 #### Bugs Fixed
@@ -8,13 +137,15 @@
 
 In this release 1 issue and 1 pull request were closed.
 
+###############################################################################
+
 ## Version Release 1.5.0 (2020/05/06)
 
 #### Breaking Changes
 
 This release requires API Level 1.7.
 
-#### Security 
+#### Security
 
 This release contains a security fix for [CVE-2020-11050](https://nvd.nist.gov/vuln/detail/CVE-2020-11050).
 
